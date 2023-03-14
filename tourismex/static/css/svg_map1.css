@@ -1,0 +1,95 @@
+
+.wrapper {
+  display: flex;
+  justify-content: center;
+}
+#map {
+  position: relative;
+}
+
+#map img {
+  max-width: 100%;
+  height: auto;
+}
+
+#map svg {
+  position: absolute;
+  top: 0;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+}
+
+#map svg path:hover {
+    animation: hoverElement 2.2s linear infinite;
+    stroke-width: 6px;
+}
+
+.district {
+  fill: none;
+  stroke: #018185;
+  stroke-width: 3px;
+  cursor: pointer;
+  pointer-events: all;
+}
+
+.svg_text {
+  font-size: min(0.7rem, 0.59vw);
+  color: #018185;
+  font-family: Helvetica;
+}
+
+@keyframes hoverElement {
+    0% {
+        fill: #292b2f;
+        fill-opacity: 50%
+    }
+    50% {
+        fill: #3bbfc3;
+        fill-opacity: 50%
+    }
+    100% {
+        fill: #292b2f;
+        fill-opacity: 50%
+    }
+}
+
+#tooltip {
+  border-radius: 5px;
+    padding: 5px;
+    background: #d5d7d9;
+    color: #018185;
+    font-size: 20px;
+    position: absolute;
+}
+
+#info_bg {
+  position: absolute;
+  left: 65%;
+  top: 56.8%;
+  height: 22%;
+  width: 30%;
+  background-color: #d7d5d9;
+  border-bottom: solid 4px #018185;
+  border-top: solid 4px #018185;
+  padding: 5px;
+}
+
+#info_bg p {
+  margin-top: 2px;
+  margin-bottom: 8px;
+}
+
+#info_cities {
+  height: 14%;
+  border-bottom: solid 1px #018185;
+}
+
+#info_climate {
+  height: 44%;
+  border-bottom: solid 1px #018185;
+}
+
+#info_geo {
+  height: 37%;
+}

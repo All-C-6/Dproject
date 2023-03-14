@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html class="light" lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/first.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/first.css') }}">
+  <title>{% block title %}{% endblock %}</title>
+</head>
+
+<header>
+  <div class="container" id="header">
+    <div class="headblock" id="logo">
+      <img src="{{ url_for('static', filename='pic/logo.png') }}" height="100%" alt="Логотип недоступен">
+    </div>
+    <div class="headblock" id="main">
+      <a href="{{ url_for('index') }}">Главная</a>
+    </div>
+    <div class="headblock" id="history">
+      <a href="{{ url_for('svg_map') }}">Карта</a>
+    </div>
+    <div class="headblock" id="climate">
+      <a href="{{ url_for('db_items') }}">Сувениры</a>
+    </div>
+    <div class="headblock" id="transport">
+      <a href="{{ url_for('transport') }}">Транспорт</a>
+    </div>
+    <div class="headblock" id="other">
+      <a id="menu" href="#">Остальное</a>
+      <ul class="sub-menu">
+         <li>
+            <a class="base_text" href="{{ url_for('rest_places') }}">Курорты</a>
+         </li>
+         <li>
+            <a class="base_text" href="{{ url_for('history') }}">История края</a>
+         </li>
+      <li>
+            <a class="base_text" href="{{ url_for('neighbours') }}">Соседи</a>
+         </li>
+      </ul>
+    </div>
+    <script src="{{url_for('static', filename='js/dropdown.js')}}"></script>
+  </div>
+
+</header>
+
+<body>
+  <div class="container" id="body">
+    <div id="side_left">
+      <h2>Новостная лента</h2>
+      <div class="feed_block"><a href="https://ircity.ru/text/gorod/2022/10/12/71728679/" class="base_text">
+        В Иркутской области улучшится качество голосовой связи
+      </a></div>
+      <div class="feed_block"><a href="https://ircity.ru/text/food/2022/10/12/71725604/" class="base_text">
+        Черный хлеб полезнее белого? А дрожжевой вреден? Отвечают врачи
+      </a></div>
+      <div class="feed_block"><a href="https://ircity.ru/text/society/2022/10/12/71728673/" class="base_text">
+        Вице-премьер РФ поручила развивать круизный туризм на Байкале. Сколько времени уйдет на создание флота?
+      </a></div>
+      <div class="feed_block"><a href="https://ircity.ru/text/transport/2022/10/12/71727959/" class="base_text">
+        Администрация Иркутска объявила конкурс на поиск перевозчика по маршруту от центра до Радищева
+      </a></div>
+      <div class="feed_block"><a href="https://ircity.ru/text/gorod/2022/10/11/71725697/" class="base_text">
+        Парламентский контроль за автобусными перевозками усилят в Иркутской области
+      </a></div>
+    </div>
+    <div class="container" id="main_block">
+      {% block body %}{% endblock %}
+    </div>
+    <div id="side_right">
+      <h2>Чат</h2>
+      <div class="container" id="chat">
+        <div class="chat_region" id="north">
+          <p class="base_text">Север</p>
+        </div>
+        <div class="chat_region" id="west">
+          <p class="base_text">Запад</p>
+        </div>
+        <div class="chat_region" id="south">
+          <p class="base_text">Юг</p>
+        </div>
+        <div class="chat_region" id="east">
+          <p class="base_text">Восток</p>
+        </div>
+      </div>
+      <div class="message">
+        <p>Сообщение!</p>
+      </div>
+    </div>
+  </div>
+
+</body>
+
+<footer>
+  <div class="container" id="footer">
+    <div class="column">
+      <div class="footblock">
+        <p class="base_text"></p>
+      </div>
+      <div class="footblock">
+        <p class="base_text"></p>
+      </div>
+      <div class="footblock">
+        <p class="base_text"></p>
+      </div>
+      <div class="footblock">
+        <p class="base_text"></p>
+      </div>
+    </div>
+    <div class="column">
+      <div class="footblock">
+        <p class="base_text"></p>
+      </div>
+      <div class="footblock">
+        <p class="base_text"></p>
+      </div>
+      <div class="footblock">
+        <p class="base_text"></p>
+      </div>
+      <div class="footblock">
+        <p class="base_text"></p>
+      </div>
+    </div>
+    <div class="column">
+      <div class="footblock">
+        <p class="base_text"></p>
+      </div>
+      <div class="footblock">
+        <p class="base_text"></p>
+      </div>
+      <div class="footblock">
+        <p class="base_text"></p>
+      </div>
+      <div class="footblock">
+        <p class="base_text"></p>
+      </div>
+    </div>
+    <div class="column">
+      <div class="footblock">
+        <p class="base_text"></p>
+      </div>
+      <div class="footblock">
+        <p class="base_text"></p>
+      </div>
+      <div class="footblock">
+        <p class="base_text"></p>
+      </div>
+      <div class="footblock">
+        <p class="base_text"></p>
+      </div>
+    </div>
+    <div class="column">
+      <div class="footblock">
+        <p class="base_text"></p>
+      </div>
+      <div class="footblock">
+        <p class="base_text"></p>
+      </div>
+      <div class="footblock">
+        <p class="base_text"></p>
+      </div>
+      <div class="footblock">
+        <p class="base_text"></p>
+      </div>
+    </div>
+    <div class="column">
+      <div class="footblock">
+        <p class="base_text"></p>
+      </div>
+      <div class="footblock">
+        <p class="base_text"></p>
+      </div>
+      <div class="footblock">
+        <p class="base_text"></p>
+      </div>
+      <div class="footblock">
+        <p class="base_text"></p>
+      </div>
+    </div>
+  </div>
+</footer>
+</html>
