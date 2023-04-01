@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/first.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/first.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
   <title>{% block title %}{% endblock %}</title>
 </head>
 
@@ -27,6 +27,7 @@
     </div>
     <div class="headblock" id="other">
       <a id="menu" href="#">Остальное</a>
+      <!--
       <ul class="sub-menu">
          <li>
             <a class="base_text" href="{{ url_for('rest_places') }}">Курорты</a>
@@ -38,13 +39,15 @@
             <a class="base_text" href="{{ url_for('neighbours') }}">Соседи</a>
          </li>
       </ul>
+      <script src="{{url_for('static', filename='js/dropdown.js')}}"></script>
+      -->
     </div>
-    <script src="{{url_for('static', filename='js/dropdown.js')}}"></script>
+
   </div>
 
 </header>
 
-<body>
+<body class="mx-0 mt-102px bg-color-red">
   <div class="container" id="body">
     <div id="side_left">
       <h2>Новостная лента</h2>

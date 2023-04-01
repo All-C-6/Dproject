@@ -1,29 +1,27 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-    mode: 'jit',
-    content: ['./templates/*.html', './static/*.{html,js}'],
+    content: ['./templates/*.html', '.*.html'],
     darkMode: 'class',
     theme: {
         extend: {
             colors: {
-                a-color: "#018185",
-                b-color: "#292b2f",
-                c-color: "#393b3f",
-                d-color: "#3bbfc3",
-                a1-color: "#018185",
-                b1-color: "#292b2f",
-                c1-color: "#018185",
-                d1-color: "#292b2f",
+                base_color: "#004953",
+                graphit_color: "#23282b",
+                base_gray_color: "#393b3f",
+                turquoise_dark_color: "#3bbfc3",
+                a1_color: "#018185",
+                b1_color: "#292b2f",
+                c1_color: "#018185",
+                d1_color: "#292b2f",
             },
             padding: {
-                standart: 10px,
-                low: 6px,
-                high: 18px,
+                standart: "10px",
+                low: "6px",
+                high: "18px",
             },
             margin: {
-                standart: 10px,
-                low: 6px,
-                high: 18px,
+                standart: "40px",
+                low: "24px",
             },
         },
     },

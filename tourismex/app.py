@@ -25,6 +25,11 @@ def index():
     return render_template("inx.html")
 
 
+@app.route('/start')
+def start():
+    return render_template("index.html")
+
+
 @app.route('/transport')
 def transport():
     return render_template("transport.html")
