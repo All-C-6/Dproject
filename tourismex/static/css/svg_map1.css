@@ -33,12 +33,6 @@
   pointer-events: all;
 }
 
-.svg_text {
-  font-size: min(0.7rem, 0.59vw);
-  color: #018185;
-  font-family: Helvetica;
-}
-
 @keyframes hoverElement {
     0% {
         fill: #292b2f;
@@ -54,42 +48,3 @@
     }
 }
 
-#tooltip {
-  border-radius: 5px;
-    padding: 5px;
-    background: #d5d7d9;
-    color: #018185;
-    font-size: 20px;
-    position: absolute;
-}
-
-#info_bg {
-  position: absolute;
-  left: 65%;
-  top: 56.8%;
-  height: 22%;
-  width: 30%;
-  background-color: #d7d5d9;
-  border-bottom: solid 4px #018185;
-  border-top: solid 4px #018185;
-  padding: 5px;
-}
-
-#info_bg p {
-  margin-top: 2px;
-  margin-bottom: 8px;
-}
-
-#info_cities {
-  height: 14%;
-  border-bottom: solid 1px #018185;
-}
-
-#info_climate {
-  height: 44%;
-  border-bottom: solid 1px #018185;
-}
-
-#info_geo {
-  height: 37%;
-}

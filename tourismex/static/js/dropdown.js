@@ -1,21 +1,16 @@
-var el = document.getElementById('menu');
-   el.addEventListener("mouseenter", showSub, false);
-   el.addEventListener("mouseleave", hideSub, false);
-   
-function showSub(e) {
-   if(this.children.length>1) {
-      this.children[1].style.height = "auto";
-      this.children[1].style.overflow = "visible";
-      this.children[1].style.opacity = "1";
-   } else { return false;
-   }
-}
-function hideSub(e) {
-    if(this.children.length>1) {
-      this.children[1].style.height = "0px";
-       this.children[1].style.overflow = "hidden";
-       this.children[1].style.opacity = "0";
-    } else {
-       return false;
-    }
-}
+const button = document.getElementById('menu-button');
+const menu = document.querySelector('[role="menu"]');
+
+button.addEventListener('click', () => {
+  const expanded = button.getAttribute('aria-expanded') === 'true' || false;
+  button.setAttribute('aria-expanded', !expanded);
+  menu.classList.toggle('hidden');
+});
+
+document.addEventListener('click', (event) => {
+  if (!button.contains(event.target)) {
+    button.setAttribute('aria-expanded', false);
+    menu.classList.add('hidden');
+  }
+});
+

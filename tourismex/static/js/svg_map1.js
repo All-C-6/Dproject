@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', function() {
       geo.innerText = "Географическая характеристика: " + this.dataset.geo;
       tooltip.style.top = (m1.offsetY + 10) + 'px';
       tooltip.style.left = (m1.offsetX + 40) + 'px';
-
     });
 
     tooltip.addEventListener('mouseover', function(m2) {

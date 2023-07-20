@@ -9,14 +9,25 @@
 
 <form method="post">
 
-  <div class="container" id="form_container_1">
-    <h2>Добавление предмета</h2>
-    <div class="form_container_2">
-      <input type="text" name="item_name" class="form_text_1" id="item_name" placeholder="Введите название позиции">
-      <input type="text" name="link" class="form_text_1" id="item_link" placeholder="Укажите ссылку на товар">
-      <input type="text" name="price" class="form_text_1" id="item_price" placeholder="Введите цену">
-      <p class="base_text">Выберите материал товара:</p>
-      <select id="selection" name="material" class="form_text_1">
+  <div class="flex flex-col text-color_turquoise" id="form_container_1">
+    <h2 class="text-2xl text-color_turquoise">Добавление предмета</h2>
+    <div class="flex flex-col">
+      <label class="block font-bold mb-2">
+        Название товара
+      </label>
+      <input type="text" name="item_name" class="py-2" id="item_name" placeholder="Введите название позиции">
+      <label class="block font-bold mb-2">
+        Ссылка на товар
+      </label>
+      <input type="text" name="link" class="py-2" id="item_link" placeholder="Укажите ссылку на товар">
+      <label class="block font-bold mb-2">
+        Цена
+      </label>
+      <input type="text" name="price" class="py-2" id="item_price" placeholder="Введите цену">
+      <label class="block font-bold mb-2">
+        Выберите материал товара
+      </label>
+      <select id="material" name="material" class="py-2 mb-2 rounded">
           <option>Дерево</option>
           <option>Камень недрагоценный</option>
           <option>Драгоценный камень</option>
@@ -24,26 +35,23 @@
           <option>Золото</option>
           <option>Иной металл</option>
       </select>
-      <textarea name="description" class="form_text_2" id="description" placeholder="Опишите особенности товара"></textarea>
+      <label class="block font-bold mb-2">
+        Опишите иные особенности товара
+      </label>
+      <textarea name="description" class="h-40 mb-2" id="description" placeholder="Опишите особенности товара"></textarea>
       <input type="submit" name="send" class="form_button_1" value="Отправить">
 
     </div>
 
-    <div class="form_container_2">
-      <input type="text" name="item_id" class="form_text_1" id="item_id" placeholder="Введите ID для удаления или редактирования">
-      <input type="submit" name="delete" class="form_button_1" value="Удалить">
-      <input type="submit" name="edit" class="form_button_1" value="Редактировать">
-    </div>
   </div>
 
 </form>
 
-<link rel="stylesheet" href="{{ url_for('static', filename='css/items.css') }}">
-<div class="container" id="items_container">
+<div class="flex bg-color_base rounded" id="items_container">
   {% for element in items %}
   <div class="items">
-    <h2>{{element.name}}</h2>
-    <p class="base_text">ID товара: {{element.id}}</p>
+    <h2>{{element.item_name}}</h2>
+    <p class="base_text">ID товара: {{element.item_id}}</p>
     <p class="base_text">Материал: {{element.material}}</p>
     <p class="base_text">{{element.price}} руб.</p>
     <a href="{{ element.link }}" class="base_text">Перейти на сайт</a>

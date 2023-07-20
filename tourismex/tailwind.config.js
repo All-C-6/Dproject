@@ -1,14 +1,18 @@
 /** @type {import('tailwindcss').Config} */
+
 module.exports = {
     content: ['./templates/*.html', '.*.html'],
     darkMode: 'class',
     theme: {
+      fontFamily: {
+        'sans': ['Helvetica', 'Arial', 'sans-serif']
+      },
         extend: {
             colors: {
-                base_color: "#004953",
-                graphit_color: "#23282b",
-                base_gray_color: "#393b3f",
-                turquoise_dark_color: "#3bbfc3",
+                color_base: "#004953",
+                color_graphit: "#2B2B2B",
+                color_base_gray: "#2B2B2B",
+                color_turquoise: "#5D9BC9",
                 a1_color: "#018185",
                 b1_color: "#292b2f",
                 c1_color: "#018185",
@@ -23,7 +27,13 @@ module.exports = {
                 standart: "40px",
                 low: "24px",
             },
+            font: {
+              standart: "16px",
+              head: "40px",
+            }
         },
     },
-    plugins: [],
+    plugins: [
+        require('tailwind-scrollbar')
+        ],
 }

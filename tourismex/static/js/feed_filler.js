@@ -1,10 +1,13 @@
-var inBody = function(){            // Создаём анонимную функцию. Помещаем её в переменную "inBody"
-   var xhr = new XMLHttpRequest()  // Создаём локальную переменную XHR, которая будет объектом XMLHttpRequest
-   xhr.open('GET', 'https://ircity.ru')     // Задаём метод запроса и URL  запроса
-   xhr.onload = function(){        // Используем обработчик событий onload, чтобы поймать ответ сервера XMLHttpRequest
-      console.log(xhr.response)           // Выводим в консоль содержимое ответа сервера. Это строка!
-      document.body.innerHTML = xhr.response  // Содержимое ответа, помещаем внутрь элемент "body"
-   }
-   xhr.send()  // Инициирует запрос. Посылаем запрос на сервер.
-}
-inBody()    // Запускаем выполнение функции получения содержимого файла
+const feed = document.getElementById("feed")
+const feed_btn = document.getElementById('feed_button');
+
+feed_btn.addEventListener('click', () => {
+    if (!feed.classList.contains('hidden')) {
+        feed.classList.add("hidden");
+
+    }
+    else {
+        feed.classList.remove("hidden");
+        }
+
+});
