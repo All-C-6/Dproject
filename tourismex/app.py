@@ -8,7 +8,6 @@ from flask_socketio import SocketIO, send
 import requests
 import secrets
 from urllib.parse import urlencode
-from flask_image_alchemy.fields import StdImageField
 from flask_image_alchemy.storages import S3Storage
 from flask_image_alchemy.fields import StdImageField
 from flask_csp.csp import csp_header
@@ -249,11 +248,14 @@ def oauth2_authorize(provider):
     # создание строки URL для авторизации
     qs = urlencode({
         'client_id': provider_data['client_id'],
-        'redirect_uri': 'http://192.168.3.2:5000',
+        'redirect_uri': url_for('oauth2_callback', provider=provider,
+                                _external=True),
         'response_type': 'code',
         'scope': ' '.join(provider_data['scopes']),
         'state': session['oauth2_state'],
     })
+    print(url_for('oauth2_callback', provider=provider,
+                                _external=True))
 
     # переадресация на созданный URL
     return redirect(provider_data['authorize_url'] + '?' + qs)
@@ -261,7 +263,7 @@ def oauth2_authorize(provider):
 
 @app.route('/callback/<provider>')
 def oauth2_callback(provider):
-    session['username'] = 'All_C'
+    print("callback")
     if not current_user.is_anonymous:
         return redirect(url_for('index'))
 
@@ -269,19 +271,16 @@ def oauth2_callback(provider):
     if provider_data is None:
         abort(404)
 
-    # if there was an authentication error, flash the error messages and exit
+    # обработка ошибки аутентификации - редирект на 'index'
     if 'error' in request.args:
         for k, v in request.args.items():
             if k.startswith('error'):
                 flash(f'{k}: {v}')
         return redirect(url_for('index'))
 
-    # make sure that the state parameter matches the one we created in the
-    # authorization request
     if request.args['state'] != session.get('oauth2_state'):
         abort(401)
 
-    # make sure that the authorization code is present
     if 'code' not in request.args:
         abort(401)
 
@@ -307,12 +306,13 @@ def oauth2_callback(provider):
     })
     if response.status_code != 200:
         abort(401)
-    email = provider_data['userinfo']['email'](response.json())
+    print(provider_data)
+    email = provider_data['email'](response.json())
 
     # find or create the user in the database
     user = db.session.scalar(db.select(User).where(User.email == email))
     if user is None:
-        user = User(email=email, username=email.split('@')[0])
+        user = User(email=email, username = email.split('@')[0] if email == None else "New User")
         db.session.add(user)
         db.session.commit()
 
