@@ -11,6 +11,7 @@ from urllib.parse import urlencode
 from flask_image_alchemy.storages import S3Storage
 from flask_image_alchemy.fields import StdImageField
 from flask_csp.csp import csp_header
+import pickle
 
 
 app = Flask(__name__)
@@ -80,6 +81,9 @@ class User(UserMixin, db.Model):
     birth_date = db.Column(db.Date, nullable=True)
     about = db.Column(db.Text, nullable=True)
     city = db.Column(db.String(64), nullable=True)
+
+    def get_id(self):
+        return (self.user_id)
 
 
 class ChatMessage(db.Model):
@@ -293,26 +297,27 @@ def oauth2_callback(provider):
         'redirect_uri': url_for('oauth2_callback', provider=provider,
                                 _external=True),
     }, headers={'Accept': 'application/json'})
+    print(f"Содержание (строка): {response.text}")
+    data = response.json()
+    print(f"Содержание: {data['email']}")
+    print(type(data))
     if response.status_code != 200:
         abort(401)
     oauth2_token = response.json().get('access_token')
-    if not oauth2_token:
+    if not oauth2_token or response.status_code != 200:
         abort(401)
 
-    # use the access token to get the user's email address
-    response = requests.get(provider_data['userinfo']['url'], headers={
-        'Authorization': 'Bearer ' + oauth2_token,
-        'Accept': 'application/json',
-    })
-    if response.status_code != 200:
-        abort(401)
-    print(provider_data)
-    email = provider_data['email'](response.json())
+    email = data['email']
+    if provider == 'vk':
+        vk_id = data["user_id"]
+
+    if provider == 'telegram':
+        telegram_id = data["user_id"]
 
     # find or create the user in the database
     user = db.session.scalar(db.select(User).where(User.email == email))
     if user is None:
-        user = User(email=email, username = email.split('@')[0] if email == None else "New User")
+        user = User(email=email, nickname = email.split('@')[0], user_type=1, vk_id=vk_id if provider == 'vk' else None, telegram_id=telegram_id if provider == 'telegram' else None)
         db.session.add(user)
         db.session.commit()
 
