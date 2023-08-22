@@ -5,56 +5,68 @@
 {% endblock %}
 
 {% block body %}
+<div class="max-w-md mx-auto text-color_turquoise rounded-md shadow-sm">
+    <h1 class="text-2xl mx-auto font-medium text-color_turquoise">Ваша учетная запись</h1>
+</div>
+
 <div class="max-w-md mx-auto my-10 bg-color_base text-color_turquoise p-5 rounded-md shadow-sm">
-        <h1 class="text-2xl font-medium mb-5">Ваша учетная запись</h1>
-        <form>
-            <div class="mb-4">
-                <label class="block font-bold mb-2" for="username">
-                    Имя пользователя
-                </label>
-                <input class="rounded-md bg-color_base_gray py-2 px-3 w-3/4 leading-tight focus:outline-none focus:shadow-outline" id="username" type="text" value="All_C" placeholder="Ваше имя пользователя:">
+    <form>
+        <div class="mb-4">
+            <label class="block font-bold mb-2" for="username">
+                Имя пользователя
+            </label>
+            <input class="rounded-md bg-color_base_gray py-2 px-3 w-3/4 leading-tight focus:outline-none focus:shadow-outline" id="username" type="text" value="All_C" placeholder="Ваше имя пользователя:">
+        </div>
+        <div class="mb-4">
+            <label class="block font-bold mb-2" for="email">
+                Email
+            </label>
+            <input class="rounded-md py-2 px-3 w-3/4 bg-color_base_gray leading-tight focus:outline-none focus:shadow-outline" id="email" type="email" value="example@gmail.com" placeholder="Введите адрес электронной почты">
+        </div>
+        <div class="mb-4">
+            <label class="block font-bold mb-2" for="avatar">
+                Ваш аватар
+            </label>
+            <input class="rounded-md py-2 px-3 w-3/4 bg-color_base_gray leading-tight focus:outline-none focus:shadow-outline" id="avatar" type="file" onchange="previewImage(event)">
+            <div class="mt-2">
+                <img id="preview" class="hidden rounded-md shadow-md">
             </div>
-            <div class="mb-4">
-                <label class="block font-bold mb-2" for="email">
-                    Email
-                </label>
-                <input class="rounded-md py-2 px-3 w-3/4 bg-color_base_gray leading-tight focus:outline-none focus:shadow-outline" id="email" type="email" value="example@gmail.com" placeholder="Введите адрес электронной почты">
-            </div>
-            <div class="mb-4">
-                <label class="block font-bold mb-2" for="avatar">
-                    Ваш аватар
-                </label>
-                <input class="rounded-md py-2 px-3 w-3/4 bg-color_base_gray leading-tight focus:outline-none focus:shadow-outline" id="avatar" type="file" onchange="previewImage(event)">
-                <div class="mt-2">
-                    <img id="preview" class="hidden rounded-md shadow-md">
-                </div>
-            </div>
-            <div class="mb-4">
-                <label class="block font-bold mb-2" for="birthdate">
-                    День рождения
-                </label>
-                <input class="rounded-md py-2 px-3 w-3/4 bg-color_base_gray leading-tight focus:outline-none focus:shadow-outline" id="birthdate" type="date">
-            </div>
-            <div class="mb-4">
-                <label class="block font-bold mb-2" for="city">
-                    Ваш город
-                </label>
-                <input class="rounded-md py-2 px-3 w-3/4 bg-color_base_gray leading-tight focus:outline-none focus:shadow-outline" id="city" type="text" value="Иркутск" placeholder="Ваш текущий город:">
-            </div>
-            <div class="mb-4">
-                <label class="block font-bold mb-2" for="about">
-                    О вас
-                </label>
-                <textarea class="rounded-md py-2 px-3 w-3/4 bg-color_base_gray leading-tight focus:outline-none focus:shadow-outline" id="about" placeholder="Расскажите о себе"></textarea>
-            </div>
-            <div class="flex items-center justify-between">
-                <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button">
-                    Сохранить
-                </button>
-                <button class="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button">
-                    Удалить профиль
-                </button>
-            </div>
+        </div>
+        <div class="mb-4">
+            <label class="block font-bold mb-2" for="birthdate">
+                День рождения
+            </label>
+            <input class="rounded-md py-2 px-3 w-3/4 bg-color_base_gray leading-tight focus:outline-none focus:shadow-outline" id="birthdate" type="date">
+        </div>
+        <div class="mb-4">
+            <label class="block font-bold mb-2" for="city">
+                Ваш город
+            </label>
+            <input class="rounded-md py-2 px-3 w-3/4 bg-color_base_gray leading-tight focus:outline-none focus:shadow-outline" id="city" type="text" value="Иркутск" placeholder="Ваш текущий город:">
+        </div>
+        <div class="mb-4">
+            <label class="block font-bold mb-2" for="about">
+                О вас
+            </label>
+            <textarea class="rounded-md py-2 px-3 w-3/4 bg-color_base_gray leading-tight focus:outline-none focus:shadow-outline" id="about" placeholder="Расскажите о себе"></textarea>
+        </div>
+        <div class="flex items-center justify-between">
+            <button id="save_user_settings" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button">
+                Сохранить
+            </button>
+            <button id="logout" class="bg-gray-700 hover:bg-color_base_gray text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button">
+                Выйти
+            </button>
+
+        </div>
+    </form>
+</div>
+
+    <div class="max-w-md mx-auto my-10 text-color_turquoise rounded-md shadow-sm">
+        <form action="delete" class="p-x-0">
+            <button class="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button">
+                Удалить профиль
+            </button>
         </form>
     </div>
     <script>
