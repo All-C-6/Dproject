@@ -1,5 +1,6 @@
 import datetime
 import os
+
 from flask import Flask, Response, render_template, request, redirect, flash, url_for, current_app, session, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
@@ -11,8 +12,6 @@ from urllib.parse import urlencode
 from flask_image_alchemy.storages import S3Storage
 from flask_image_alchemy.fields import StdImageField
 from flask_csp.csp import csp_header
-import pickle
-
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///project.db'
@@ -26,7 +25,6 @@ app.config['OAUTH2_PROVIDERS'] = {
         'token_url': 'https://oauth.telegram.com/access_token',
         'userinfo': {
             'url': 'https://api.github.com/user/emails',
-            'email': lambda json: json['email']
         },
         'scopes': [],
     },
@@ -39,7 +37,6 @@ app.config['OAUTH2_PROVIDERS'] = {
         'token_url': 'https://oauth.vk.com/access_token',
         'userinfo': {
             'url': 'https://oauth.vk.com/blank.html',
-            'email': lambda json: json[0]['email']
         },
         'scopes': ['email'],
     },
@@ -47,13 +44,16 @@ app.config['OAUTH2_PROVIDERS'] = {
 
 db = SQLAlchemy(app)
 lm = LoginManager(app)
+storage = S3Storage()
+storage.init_app(app)
 sio = SocketIO(app, cors_allowed_origins='*')
-
+current_page = "/"
 
 app.config['AWS_ACCESS_KEY_ID'] = os.environ.get('AWS_ACCESS_KEY_ID')
 app.config['AWS_SECRET_ACCESS_KEY'] = os.environ.get('AWS_SECRET_ACCESS_KEY')
 app.config['AWS_REGION_NAME'] = os.environ.get('AWS_REGION_NAME', 'eu-central-1')
 app.config['S3_BUCKET_NAME'] = os.environ.get('AWS_REGION_NAME', 'haraka-local')
+app.config["MEDIA_PATH"] = "/static/pic/avatars"
 
 if __name__ == "main":
     sio.run(app)
@@ -76,14 +76,20 @@ class User(UserMixin, db.Model):
     restriction = db.Column(db.Integer, nullable=True)
     nickname = db.Column(db.String(64), nullable=False, unique=True)
     email = db.Column(db.String(64), nullable=True, unique=True)
-    image = db.Column(StdImageField(storage=S3Storage(
-    )))
+    avatar = db.Column(
+        StdImageField(
+            storage=storage,
+            variations={
+                'thumbnail': {"width": 200, "height": 200, "crop": True}
+            }
+        ), nullable=True
+    )
     birth_date = db.Column(db.Date, nullable=True)
     about = db.Column(db.Text, nullable=True)
     city = db.Column(db.String(64), nullable=True)
 
     def get_id(self):
-        return (self.user_id)
+        return self.user_id
 
 
 class ChatMessage(db.Model):
@@ -103,7 +109,12 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-@app.route('/index')
+@app.before_request
+def store_current_page():
+    global current_page
+    current_page = request.path
+
+
 @app.route('/')
 @csp_header({
     'default-src': "'self' 'unsafe-inline' api-maps.yandex.ru yandex.ru oauth.telegram.org telegram.org",
@@ -113,19 +124,6 @@ def load_user(user_id):
 })
 def index():
     return render_template("inx.html")
-
-
-@app.route('/index')
-@app.route('/')
-def responsing():
-    response = Response()
-    response.headers['Content-Security-Policy'] = "frame-ancestors oauth.telegram.org telegram.org"
-    return response
-
-
-@app.route('/start')
-def start():
-    return render_template("index.html")
 
 
 @app.route('/transport')
@@ -161,9 +159,7 @@ def svg_map():
 
 @app.route('/goods', methods=['POST', 'GET'])
 def item_processing():
-    print("item_processing")
     if request.method == 'POST':
-        print("post")
         if request.form.get('send') == 'Отправить':
             print("send")
             item_name = str(request.form['item_name'])
@@ -207,7 +203,6 @@ def item_processing():
             db.session.commit()
             return redirect('/goods')
 
-
     else:
         items = Item.query.order_by(Item.price).all()
         return render_template("items.html", items=items)
@@ -234,7 +229,7 @@ def logout():
 
 @app.route('/user_account', methods=['POST', 'GET'])
 def account_edit():
-    return render_template("user_account.html")
+    return render_template("user_account.html", user=current_user)
 
 
 @app.route('/authorize/<provider>')
@@ -248,7 +243,8 @@ def oauth2_authorize(provider):
 
     # генерация строки информационного шума
     session['oauth2_state'] = secrets.token_urlsafe(16)
-
+    page = request.url
+    print(page)
     # создание строки URL для авторизации
     qs = urlencode({
         'client_id': provider_data['client_id'],
@@ -258,8 +254,6 @@ def oauth2_authorize(provider):
         'scope': ' '.join(provider_data['scopes']),
         'state': session['oauth2_state'],
     })
-    print(url_for('oauth2_callback', provider=provider,
-                                _external=True))
 
     # переадресация на созданный URL
     return redirect(provider_data['authorize_url'] + '?' + qs)
@@ -288,7 +282,7 @@ def oauth2_callback(provider):
     if 'code' not in request.args:
         abort(401)
 
-    # exchange the authorization code for an access token
+    # получение токена
     response = requests.post(provider_data['token_url'], data={
         'client_id': provider_data['client_id'],
         'client_secret': provider_data['client_secret'],
@@ -314,16 +308,17 @@ def oauth2_callback(provider):
     if provider == 'telegram':
         telegram_id = data["user_id"]
 
-    # find or create the user in the database
+    # создание нового или простой логин пользователя
     user = db.session.scalar(db.select(User).where(User.email == email))
     if user is None:
-        user = User(email=email, nickname = email.split('@')[0], user_type=1, vk_id=vk_id if provider == 'vk' else None, telegram_id=telegram_id if provider == 'telegram' else None)
+        user = User(email=email, nickname=email.split('@')[0], user_type=1, vk_id=vk_id if provider == 'vk' else None,
+                    telegram_id=telegram_id if provider == 'telegram' else None)
         db.session.add(user)
         db.session.commit()
 
-    # log the user in
+    # вход пользователя
     login_user(user)
-    return redirect(url_for('index'))
+    return render_template("user_account.html", user=user)
 
 
 if __name__ == "__main__":
