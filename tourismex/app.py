@@ -3,20 +3,32 @@ import os
 
 from flask import Flask, Response, render_template, request, redirect, flash, url_for, current_app, session, abort
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
+from sqlalchemy.event import listen
 from sqlalchemy import create_engine, Column, Integer, String, Float, Text
-from flask_socketio import SocketIO, send
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
 import requests
 import secrets
 from urllib.parse import urlencode
 from flask_image_alchemy.storages import S3Storage
 from flask_image_alchemy.fields import StdImageField
+from flask_image_alchemy.events import before_update_delete_callback, before_delete_delete_callback
+from flask_socketio import SocketIO, send
 from flask_csp.csp import csp_header
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///project.db'
-app.config['SECRET_KEY'] = 'TSSiteFlask'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# конфигурация приложения
+app = Flask(__name__)  # создание экземпляра приложения
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///project.db'  # назначение пути к базе данных
+app.config['SECRET_KEY'] = 'TSSiteFlask'  # секретный ключ приложения
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # отключение предупреждений о модификации путей
+
+# настройки для S3-хранилища
+app.config['AWS_ACCESS_KEY_ID'] = os.environ.get('AWS_ACCESS_KEY_ID')
+app.config['AWS_SECRET_ACCESS_KEY'] = os.environ.get('AWS_SECRET_ACCESS_KEY')
+app.config['AWS_REGION_NAME'] = os.environ.get('AWS_REGION_NAME', 'eu-central-1')
+app.config['S3_BUCKET_NAME'] = os.environ.get('AWS_REGION_NAME', 'haraka-local')
+app.config["MEDIA_PATH"] = "/static/pic/avatars"
+
+# конфигурация oauth провайдеров
 app.config['OAUTH2_PROVIDERS'] = {
     'telegram': {
         'client_id': "6266128295",
@@ -42,23 +54,19 @@ app.config['OAUTH2_PROVIDERS'] = {
     },
 }
 
-db = SQLAlchemy(app)
-lm = LoginManager(app)
-storage = S3Storage()
+db = SQLAlchemy(app)  # создание экземпляра базы данных
+lm = LoginManager(app)  # создание экземпляра логин-менеджера
+storage = S3Storage()  # создание экземпляра хранилища изображений
 storage.init_app(app)
 sio = SocketIO(app, cors_allowed_origins='*')
 current_page = "/"
 
-app.config['AWS_ACCESS_KEY_ID'] = os.environ.get('AWS_ACCESS_KEY_ID')
-app.config['AWS_SECRET_ACCESS_KEY'] = os.environ.get('AWS_SECRET_ACCESS_KEY')
-app.config['AWS_REGION_NAME'] = os.environ.get('AWS_REGION_NAME', 'eu-central-1')
-app.config['S3_BUCKET_NAME'] = os.environ.get('AWS_REGION_NAME', 'haraka-local')
-app.config["MEDIA_PATH"] = "/static/pic/avatars"
 
 if __name__ == "main":
     sio.run(app)
 
 
+# модель товара
 class Item(db.Model):
     item_id = db.Column(Integer, primary_key=True)
     item_name = db.Column(String(52), nullable=False)
@@ -68,6 +76,7 @@ class Item(db.Model):
     desc = db.Column(Text)
 
 
+# модель пользователя
 class User(UserMixin, db.Model):
     user_id = db.Column(db.Integer, primary_key=True)
     telegram_id = db.Column(db.String(64), nullable=True, unique=True)
@@ -92,6 +101,7 @@ class User(UserMixin, db.Model):
         return self.user_id
 
 
+# модель сообщения
 class ChatMessage(db.Model):
     message_id = db.Column(Integer, primary_key=True)
     username = db.Column(String(64))
@@ -104,17 +114,20 @@ class ChatMessage(db.Model):
     )
 
 
+# логин-менеджер
 @lm.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
 
+# получение текущей страницы пользователя (еще не реализовано)
 @app.before_request
 def store_current_page():
     global current_page
     current_page = request.path
 
 
+# маршрутизация
 @app.route('/')
 @csp_header({
     'default-src': "'self' 'unsafe-inline' api-maps.yandex.ru yandex.ru oauth.telegram.org telegram.org",
@@ -157,6 +170,7 @@ def svg_map():
     return render_template("svg_map.html")
 
 
+# обработка запросов по товарам
 @app.route('/goods', methods=['POST', 'GET'])
 def item_processing():
     if request.method == 'POST':
@@ -208,6 +222,7 @@ def item_processing():
         return render_template("items.html", items=items)
 
 
+# обработка SocketIO сообщений (еще не доработано)
 @sio.on('message')
 def handle_message(data):
     print(f"Message: {data}")
@@ -227,24 +242,27 @@ def logout():
     return redirect(url_for('index'))
 
 
+# управление профилем
+@login_required
 @app.route('/user_account', methods=['POST', 'GET'])
 def account_edit():
     return render_template("user_account.html", user=current_user)
 
 
+# авторизация OAuth2
 @app.route('/authorize/<provider>')
 def oauth2_authorize(provider):
-    if not current_user.is_anonymous:
+    if not current_user.is_anonymous:  # если пользователь уже авторизован
         return redirect(url_for('index'))
 
-    provider_data = current_app.config['OAUTH2_PROVIDERS'].get(provider)
+    provider_data = current_app.config['OAUTH2_PROVIDERS'].get(provider)  # получение данных о провайдере
     if provider_data is None:
         abort(404)
 
     # генерация строки информационного шума
     session['oauth2_state'] = secrets.token_urlsafe(16)
-    page = request.url
-    print(page)
+    # page = request.url
+    # print(page)
     # создание строки URL для авторизации
     qs = urlencode({
         'client_id': provider_data['client_id'],
@@ -259,23 +277,25 @@ def oauth2_authorize(provider):
     return redirect(provider_data['authorize_url'] + '?' + qs)
 
 
+# обработка callback
 @app.route('/callback/<provider>')
 def oauth2_callback(provider):
-    print("callback")
-    if not current_user.is_anonymous:
+    # print("callback")
+    if not current_user.is_anonymous:  # если пользователь уже авторизован, то все готово
         return redirect(url_for('index'))
 
-    provider_data = current_app.config['OAUTH2_PROVIDERS'].get(provider)
+    provider_data = current_app.config['OAUTH2_PROVIDERS'].get(provider)  # получение данных о провайдере
     if provider_data is None:
         abort(404)
 
-    # обработка ошибки аутентификации - редирект на 'index'
+    # обработка ошибки аутентификации - редирект на главную страницу
     if 'error' in request.args:
         for k, v in request.args.items():
             if k.startswith('error'):
                 flash(f'{k}: {v}')
         return redirect(url_for('index'))
 
+    # проверка состояния запроса и кода ответа
     if request.args['state'] != session.get('oauth2_state'):
         abort(401)
 
@@ -291,12 +311,14 @@ def oauth2_callback(provider):
         'redirect_uri': url_for('oauth2_callback', provider=provider,
                                 _external=True),
     }, headers={'Accept': 'application/json'})
-    print(f"Содержание (строка): {response.text}")
-    data = response.json()
-    print(f"Содержание: {data['email']}")
-    print(type(data))
-    if response.status_code != 200:
+    # print(f"Содержание (строка): {response.text}")
+    # print(f"Содержание: {data['email']}")
+    # print(type(data))
+    if response.status_code != 200:  # если код ответа не 200, то прервать
         abort(401)
+
+    # парсинг ответа JSON (в процессе доработки)
+    data = response.json()
     oauth2_token = response.json().get('access_token')
     if not oauth2_token or response.status_code != 200:
         abort(401)
@@ -308,7 +330,7 @@ def oauth2_callback(provider):
     if provider == 'telegram':
         telegram_id = data["user_id"]
 
-    # создание нового или простой логин пользователя
+    # создание нового и/или логин пользователя
     user = db.session.scalar(db.select(User).where(User.email == email))
     if user is None:
         user = User(email=email, nickname=email.split('@')[0], user_type=1, vk_id=vk_id if provider == 'vk' else None,
@@ -316,7 +338,6 @@ def oauth2_callback(provider):
         db.session.add(user)
         db.session.commit()
 
-    # вход пользователя
     login_user(user)
     return render_template("user_account.html", user=user)
 
