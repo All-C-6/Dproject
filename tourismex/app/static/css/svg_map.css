@@ -1,0 +1,50 @@
+
+.wrapper {
+  display: flex;
+  justify-content: center;
+}
+#map {
+  position: relative;
+}
+
+#map img {
+  max-width: 100%;
+  height: auto;
+}
+
+#map svg {
+  position: absolute;
+  top: 0;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+}
+
+#map svg path:hover {
+    animation: hoverElement 2.2s linear infinite;
+    stroke-width: 6px;
+}
+
+.district {
+  fill: none;
+  stroke: #018185;
+  stroke-width: 3px;
+  cursor: pointer;
+  pointer-events: all;
+}
+
+@keyframes hoverElement {
+    0% {
+        fill: #292b2f;
+        fill-opacity: 50%
+    }
+    50% {
+        fill: #3bbfc3;
+        fill-opacity: 50%
+    }
+    100% {
+        fill: #292b2f;
+        fill-opacity: 50%
+    }
+}
+

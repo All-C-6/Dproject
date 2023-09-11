@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html class="light" lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" href="{{ url_for('static', filename='pic/logo.png') }}" type="image/png">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <title>{% block title %}{% endblock %}</title>
+</head>
+
+<header id="header" class="flex fixed px-8 py-2 h-24 justify-between w-screen bg-color_base text-color_turquoise text-3xl font-bold">
+    <div class="mt-0" id="logo">
+      <img src="{{ url_for('static', filename='pic/logo.png') }}" class="w-auto h-full object-contain" alt="Логотип недоступен">
+    </div>
+      <div class="mt-5">
+        <a href="{{ url_for('index') }}">Главная</a>
+      </div>
+      <div class="mt-5">
+        <a href="{{ url_for('svg_map') }}">Карта</a>
+      </div>
+      <div class="mt-5">
+        <a href="{{ url_for('item_processing') }}">Сувениры</a>
+      </div>
+      <div class="mt-5">
+        <a href="{{ url_for('transport') }}">Транспорт</a>
+      </div>
+      <div class="hidden">
+        <img src="{{ url_for('static', filename='pic/account.png') }}" class="h-20" alt="Логотип недоступен">
+      </div>
+      <div class="mt-5">
+        <div class="relative inline-block text-left w-auto h-full object-contain">
+          <button type="button" class="inline-flex bg-color_turquoise border-color_turquoise border-2 border-solid hover:bg-color_base hover:border-color_turquoise hover:border-2 hover:text-color_turquoise text-color_base font-bold px-4 rounded" id="menu-button" aria-expanded="false" aria-haspopup="true">
+            Остальное
+            <!-- Heroicon name: chevron-down -->
+            <svg class="-mr-1 ml-2 h-8 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15" fill="currentColor">
+              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 011.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </button>
+
+          <div class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden" role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
+            <div class="py-1 bg-color_turquoise rounded" role="none">
+              <a href="#" class="block px-4 py-2 text-2xl bg-color_turquoise border-r-4 border-l-4 border-color_turquoise text-color_base hover:border-color_base" role="menuitem">История</a>
+              <a href="/rest_places" class="block px-4 py-2 text-2xl bg-color_turquoise border-r-4 border-l-4 border-color_turquoise text-color_base hover:border-color_base" role="menuitem">Рекреация</a>
+              <a href="#" class="block px-4 py-2 text-2xl bg-color_turquoise border-r-4 border-l-4 border-color_turquoise text-color_base hover:border-color_base" role="menuitem">Соседние регионы</a>
+              <a href="#" class="block px-4 py-2 text-2xl bg-color_turquoise border-r-4 border-l-4 border-color_turquoise text-color_base hover:border-color_base" role="menuitem">Переключить тему</a>
+              <a href="/user_account" class="block px-4 py-2 text-2xl bg-color_turquoise border-r-4 border-l-4 border-color_turquoise text-color_base hover:border-color_base" role="menuitem">Личный кабинет</a>
+            </div>
+          </div>
+        </div>
+        <script src="{{ url_for('static', filename='js/dropdown.js') }}"></script>
+      </div>
+      <div class="mt-0 max-w-24">
+          {% if current_user.is_authenticated %}
+            <button id="account-btn" class="bg-color_turquoise border-color_turquoise border-2 border-solid hover:bg-color_base hover:border-color_turquoise hover:border-2 hover:text-color_turquoise text-color_base font-bold mt-4 py-2 px-4 rounded">
+              <a href="{{ url_for('account_edit') }}">Аккаунт</a>
+            </button>
+
+          {% else %}
+            <button id="register-btn" class="bg-color_turquoise border-color_turquoise border-2 border-solid hover:bg-color_base hover:border-color_turquoise hover:border-2 hover:text-color_turquoise text-color_base font-bold mt-4 py-2 px-4 rounded">
+              Войти
+            </button>
+          {% endif %}
+      </div>
+
+      <div id="register-modal" class="fixed w-48 right-4 top-20 hidden">
+          <div class="align-bottom rounded-t-lg overflow-hidden mb-4  sm:my-8 sm:max-w-lg sm:w-full">
+            <div class="bg-color_base pt-5 pb-4 sm:p-6 sm:pb-4">
+              <div class="sm:flex sm:items-start">
+
+                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                  <h2 id="register-modal-title" class="text-2xl text-color_turquoise">
+                    Войдите, чтобы получить доступ к чату
+                  </h2>
+
+                </div>
+              </div>
+            </div>
+            <div id="register-modal-footer" class="rounded-b-lg bg-color_base text-xl px-4 py-3 mt-2">
+              <form action="{{ url_for('oauth2_authorize', provider='telegram') }}">
+                <button class="bg-blue-500 hover:bg-blue-800 text-white font-bold py-2 px-4 mb-2 rounded-2xl ">
+                  Войти через Telegram
+                </button>
+              </form>
+
+              <form action="{{ url_for('oauth2_authorize', provider='vk') }}">
+                <button class="bg-blue-600 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded-xl">
+                  Войти через VK
+                </button>
+            </form>
+            </div>
+          </div>
+        </div>
+      <script src="{{ url_for('static', filename='js/pscript.js') }}"></script>
+</header>
+<body class="bg-color_base_gray mb-24 scrollbar-thin scrollbar-thumb-color_turquoise scrollbar-track-transparent">
+  <div class="pt-24 flex flex-row w-3/5 mx-auto min-w-[1000px]" id="main_block">
+    <div id="feed" class="basis-2/12 mt-2 text-color_turquoise">
+      <h2 class="mb-2 text-xl font-bold text-color_turquoise">Новостная лента</h2>
+      <div class="bg-color_base p-2 rounded mb-2"><a href="https://ircity.ru/text/gorod/2022/10/12/71728679/" >
+        В Иркутской области улучшится качество голосовой связи
+      </a></div>
+      <div class="bg-color_base p-2 rounded mb-2"><a href="https://ircity.ru/text/food/2022/10/12/71725604/">
+        Черный хлеб полезнее белого? А дрожжевой вреден? Отвечают врачи
+      </a></div>
+      <div class="bg-color_base p-2 rounded mb-2"><a href="https://ircity.ru/text/society/2022/10/12/71728673/">
+        Вице-премьер РФ поручила развивать круизный туризм на Байкале. Сколько времени уйдет на создание флота?
+      </a></div>
+      <div class="bg-color_base p-2 rounded mb-2"><a href="https://ircity.ru/text/transport/2022/10/12/71727959/">
+        Администрация Иркутска объявила конкурс на поиск перевозчика по маршруту от центра до Радищева
+      </a></div>
+      <div class="bg-color_base p-2 rounded mb-2"><a href="https://ircity.ru/text/gorod/2022/10/11/71725697/">
+        Парламентский контроль за автобусными перевозками усилят в Иркутской области
+      </a></div>
+    </div>
+    <div class="basis-9/12 min-w-[600px] mx-2 p-2 rounded">
+      {% block body %}{% endblock %}
+    </div>
+    <div class="h-full basis-4/12 mt-2">
+      <h2 class="text-xl font-bold text-color_turquoise">Чат</h2>
+      <div>
+        <div class="h-[50rem] flex flex-col text-color_turquoise">
+          <div class="flex-1 overflow-y-scroll scrollbar-thin scrollbar-thumb-color_turquoise scrollbar-track-transparent border-dashed border-y-2 border-y-color_turquoise" id="chatblock" data-simplebar>
+          <!-- здесь будут отображаться сообщения -->
+            <div class="flex flex-row items-end p-2 my-2 mr-2">
+              <p class="bg-color_base rounded p-2 w-full" id="message_1">Это сообщение от меня. Приветствуем вас на нашем сайте Tourismex!</p>
+              <img
+                src="{{ url_for('static', filename='pic/usericon_default.png') }}"
+                alt="Дефолтное изображение"
+                height="50px"
+                width="50px" />
+            </div>
+
+          </div>
+
+
+        </div>
+        <form class="flex -mx-4 flex-col items-end p-4">
+          <textarea id="message_text" placeholder="Введите сообщение..." class="flex-auto w-full h-40 py-2 px-4 bg-color_base text-color_turquoise placeholder:text-color_turquoise placeholder:italic rounded-lg border-gray-300 resize-y focus:outline-none focus:ring-2 focus:ring-color_turquoise focus:ring-opacity-50" contenteditable></textarea>
+          {% if current_user.is_authenticated %}
+          <button type="button" id="send_message" class="ml-4 mt-2 py-2 px-4 bg-color_turquoise text-white rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-opacity-50">Отправить</button>
+          {% else %}
+          <button type="button" id="blocked_sending" class="ml-4 mt-2 py-2 px-4 disabled cursor-not-allowed bg-gray-500 text-gray-300 rounded-lg ">Сначала авторизируйтесь</button>
+          {% endif %}
+        </form>
+      </div>
+      <div id="ChatContextMenu" style="display: none;" class="absolute text-color_turquoise z-50">
+        <ul>
+          <li id="delete_message" class="bg-color_base rounded p-2 my-2 border border-solid border-2 border-color_graphit">Удалить сообщение</li>
+          <li id="edit_message" class="bg-color_base rounded p-2 my-2 border border-solid border-2 border-color_graphit">Редактировать сообщение</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+
+<footer class="fixed bottom-0 left-0 h-24 w-full font-bold border-t-4 border-t-color_base border-solid bg-color_graphit text-color_turquoise py-2 z-50">
+  <div class="flex grid grid-flow-col justify-evenly items-center">
+
+    <img id="ISU_logo" class="w-auto my-1 h-16 object-contain"
+                src="{{ url_for('static', filename='pic/ISU_BCIF.png') }}"
+                alt="Логотип ФБКИ"/>
+    <p>ИГУ</p>
+    <p>Создано в ФБКИ</p>
+  </div>
+  <script src="{{ url_for('static', filename='js/contextmenu.js') }}"></script>
+</footer>
+</html>
