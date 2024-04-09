@@ -1,5 +1,6 @@
 import datetime
 import os
+import socket
 
 from flask import Flask, Response, render_template, request, redirect, flash, url_for, current_app, session, abort
 from flask_sqlalchemy import SQLAlchemy
@@ -11,37 +12,42 @@ import secrets
 from urllib.parse import urlencode
 from flask_image_alchemy.storages import S3Storage
 from flask_image_alchemy.fields import StdImageField
-from flask_image_alchemy.events import before_update_delete_callback, before_delete_delete_callback
 from flask_socketio import SocketIO, send
 from flask_csp.csp import csp_header
 
-# конфигурация приложения
 app = Flask(__name__)  # создание экземпляра приложения
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///project.db'  # назначение пути к базе данных
-app.config['SECRET_KEY'] = 'TSSiteFlask'  # секретный ключ приложения
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # отключение предупреждений о модификации путей
 
-# настройки для S3-хранилища
+# конфигурация приложения: путь к базе данных, ключ шифрования и отключение отслеживания модификаций БД
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///project.db'
+app.config['SECRET_KEY'] = 'TSSiteFlask'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# настройки для S3-хранилища: ключ, секретный ключ, регион и название бакета
 app.config['AWS_ACCESS_KEY_ID'] = os.environ.get('AWS_ACCESS_KEY_ID')
 app.config['AWS_SECRET_ACCESS_KEY'] = os.environ.get('AWS_SECRET_ACCESS_KEY')
 app.config['AWS_REGION_NAME'] = os.environ.get('AWS_REGION_NAME', 'eu-central-1')
 app.config['S3_BUCKET_NAME'] = os.environ.get('AWS_REGION_NAME', 'haraka-local')
+
+# путь для хранения изображений
 app.config["MEDIA_PATH"] = "/static/pic/avatars"
 
 # конфигурация oauth провайдеров
 app.config['OAUTH2_PROVIDERS'] = {
+    # Telegram: ID, Secret, URL для авторизации, URL для получения токена, URL для получения информации о пользователе
     'telegram': {
         'client_id': "6266128295",
         'client_secret': 'AAHmsbw16Cm11NtgDtZ_NZShdupIRWhw_Hw',
         'authorize_url': 'https://oauth.telegram.org/authorize',
         'token_url': 'https://oauth.telegram.com/access_token',
         'userinfo': {
-            'url': 'https://api.github.com/user/emails',
+            'url': 'api.telegram.org/bot6266128295:AAHmsbw16Cm11NtgDtZ_NZShdupIRWhw_Hw/getMe',
         },
         'scopes': [],
     },
 
     # https://dev.vk.com/api/access-token/implicit-flow-user
+    # VK: ID, Secret, URL для авторизации, URL для получения токена, URL для получения информации о пользователе,
+    # получаемые данные из JSON ответа
     'vk': {
         'client_id': '51679319',
         'client_secret': 'URCsP1omgcBo0XRiBl5J',
@@ -54,19 +60,15 @@ app.config['OAUTH2_PROVIDERS'] = {
     },
 }
 
-db = SQLAlchemy(app)  # создание экземпляра базы данных
-lm = LoginManager(app)  # создание экземпляра логин-менеджера
-storage = S3Storage()  # создание экземпляра хранилища изображений
+# создание экземпляров базы данных, логин-менеджера, хранилища S3 и SocketIO
+db = SQLAlchemy(app)
+lm = LoginManager(app)
+storage = S3Storage()
 storage.init_app(app)
 sio = SocketIO(app, cors_allowed_origins='*')
-current_page = "/"
 
 
-if __name__ == "main":
-    sio.run(app)
-
-
-# модель товара
+# модель товара: ID, название, ссылка, цена, материал, описание
 class Item(db.Model):
     item_id = db.Column(Integer, primary_key=True)
     item_name = db.Column(String(52), nullable=False)
@@ -76,7 +78,8 @@ class Item(db.Model):
     desc = db.Column(Text)
 
 
-# модель пользователя
+# модель пользователя: ID БД, Telegram ID, VK ID, тип пользователя, наложеннные ограничения, никнейм, почта, аватар,
+# дата рождения, о себе, город проживания
 class User(UserMixin, db.Model):
     user_id = db.Column(db.Integer, primary_key=True)
     telegram_id = db.Column(db.String(64), nullable=True, unique=True)
@@ -101,9 +104,10 @@ class User(UserMixin, db.Model):
         return self.user_id
 
 
-# модель сообщения
+# модель сообщения: ID, ID автора, имя автора, ID ответа, текст сообщения, время отправки, вложения
 class ChatMessage(db.Model):
     message_id = db.Column(Integer, primary_key=True)
+    user_id = db.Column(Integer)
     username = db.Column(String(64))
     replay = db.Column(Integer)
     message = db.Column(Text)
@@ -114,20 +118,15 @@ class ChatMessage(db.Model):
     )
 
 
-# логин-менеджер
+# вход пользователя в систему через логин-менеджер
 @lm.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-# получение текущей страницы пользователя (еще не реализовано)
-@app.before_request
-def store_current_page():
-    global current_page
-    current_page = request.path
-
-
-# маршрутизация
+# блок маршрутизации приложения
+#
+#
 @app.route('/')
 @csp_header({
     'default-src': "'self' 'unsafe-inline' api-maps.yandex.ru yandex.ru oauth.telegram.org telegram.org",
@@ -135,35 +134,43 @@ def store_current_page():
     'script-src-elem': "'self' api-maps.yandex.ru oauth.telegram.org telegram.org",
     'frame-ancestors': "oauth.telegram.org telegram.org"
 })
+# стартовая страница
 def index():
+    db.create_all()
     return render_template("inx.html")
 
 
+# страница транспорта
 @app.route('/transport')
 def transport():
     return render_template("transport.html")
 
 
+# страница о климате области
 @app.route('/climate')
 def climate():
     return render_template("climate.html")
 
 
+# страница об истории края
 @app.route('/history')
 def history():
     return render_template("history.html")
 
 
+# страница о местах отдыха
 @app.route('/rest_places')
 def rest_places():
     return render_template("rest_places.html")
 
 
+# страница о сопредельных регионах
 @app.route('/neighbours')
 def neighbours():
     return render_template("neighbours.html")
 
 
+# страница с интерактивной картой
 @app.route('/svg_map')
 def svg_map():
     print("svg_map")
@@ -173,9 +180,11 @@ def svg_map():
 # обработка запросов по товарам
 @app.route('/goods', methods=['POST', 'GET'])
 def item_processing():
+    # при отправке данных из формы: отправление данных в БД, редактирование и удаление товара
     if request.method == 'POST':
         if request.form.get('send') == 'Отправить':
-            print("send")
+
+            # заполнение согласно классу Item
             item_name = str(request.form['item_name'])
             link = str(request.form['link'])
             price = int(request.form['price'])
@@ -188,12 +197,15 @@ def item_processing():
                 db.session.add(item)
                 db.session.commit()
                 return redirect('/goods')
-            except:
+
+            except Exception:
                 return "Произошла ошибка добавления предмета. Свяжитесь с администратором."
 
         elif request.form.get('delete') == 'Удалить':
+            # попытка получения товара по ID, при неудаче выводится 404 код
             item = Item.query.get_or_404(request.form['item_id'])
 
+            # удаление из БД
             try:
                 db.session.delete(item)
                 db.session.commit()
@@ -202,7 +214,10 @@ def item_processing():
                 return "Ошибка при удалении"
 
         elif request.form.get('edit') == 'Редактировать':
+            # попытка получения товара по ID, при неудаче выводится 404 код
             item = Item.query.get_or_404(request.form['item_id'])
+
+            # получение данных из непустых форм и запись в БД согласно классу Item
             if request.form['item_name'] != "":
                 item.item_name = str(request.form['item_name'])
             if request.form['link'] != "":
@@ -217,6 +232,7 @@ def item_processing():
             db.session.commit()
             return redirect('/goods')
 
+    # при GET запросе вывод списка всех предметов
     else:
         items = Item.query.order_by(Item.price).all()
         return render_template("items.html", items=items)
@@ -235,6 +251,7 @@ def handle_message(data):
     db.session.commit()
 
 
+# выход из профиля
 @app.route('/logout')
 def logout():
     logout_user()
@@ -242,7 +259,7 @@ def logout():
     return redirect(url_for('index'))
 
 
-# управление профилем
+# отображение страницы управления профилем
 @login_required
 @app.route('/user_account', methods=['POST', 'GET'])
 def account_edit():
@@ -250,11 +267,15 @@ def account_edit():
 
 
 # авторизация OAuth2
+# функция принимает имя провайдера, которе влияет на нюансы работы авторизации каждого отдельного провайдера
+# можно легко масштабировать на других провайдеров, кроме тех, что используют первую версию OAuth
 @app.route('/authorize/<provider>')
 def oauth2_authorize(provider):
-    if not current_user.is_anonymous:  # если пользователь уже авторизован
+    # если пользователь уже авторизован
+    if not current_user.is_anonymous:
         return redirect(url_for('index'))
 
+    # получение данных о провайдере и выход из функции, если данные пустые
     provider_data = current_app.config['OAUTH2_PROVIDERS'].get(provider)  # получение данных о провайдере
     if provider_data is None:
         abort(404)
@@ -273,15 +294,16 @@ def oauth2_authorize(provider):
         'state': session['oauth2_state'],
     })
 
-    # переадресация на созданный URL
+    # переадресация на созданный URL ("?" является стандатрным разделителем в параметрах URL)
     return redirect(provider_data['authorize_url'] + '?' + qs)
 
 
 # обработка callback
+# функция принимает имя провайдера
 @app.route('/callback/<provider>')
 def oauth2_callback(provider):
-    # print("callback")
-    if not current_user.is_anonymous:  # если пользователь уже авторизован, то все готово
+    # если пользователь уже авторизован, то все готово
+    if not current_user.is_anonymous:
         return redirect(url_for('index'))
 
     provider_data = current_app.config['OAUTH2_PROVIDERS'].get(provider)  # получение данных о провайдере
@@ -331,6 +353,7 @@ def oauth2_callback(provider):
         telegram_id = data["user_id"]
 
     # создание нового и/или логин пользователя
+    # изъян: никнейм может повториться (а должен быть уникальным), и возникнет ошибка регистрации
     user = db.session.scalar(db.select(User).where(User.email == email))
     if user is None:
         user = User(email=email, nickname=email.split('@')[0], user_type=1, vk_id=vk_id if provider == 'vk' else None,
@@ -342,5 +365,14 @@ def oauth2_callback(provider):
     return render_template("user_account.html", user=user)
 
 
+# запуск главного приложения
 if __name__ == "__main__":
-    app.run(host='192.168.3.2', port=5000, debug=True, threaded=False)
+    # для захода на сайт с локальных устройств нужно задать ip адрес как у компьютера, получаем его
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    ip = s.getsockname()[0]
+    s.close()
+    if ip:
+        app.run(host=ip, port=5000, debug=True, threaded=True)
+    else:
+        app.run(host="192.168.3.2", port=5000, debug=True, threaded=True)
