@@ -1,11 +1,11 @@
-from ORM import Item
+from tourismex.app.modules.classes import Item, db
 from flask import render_template, request, redirect, Blueprint
 
-module = Blueprint('entity', __name__, url_prefix='/entity')
+items_bp = Blueprint('items', __name__, url_prefix='/entity')
 
 
 # обработка запросов по товарам
-@app.route('/goods', methods=['POST', 'GET'])
+@items_bp.route('/goods', methods=['POST', 'GET'])
 def item_processing():
     if request.method == 'POST':
         if request.form.get('send') == 'Отправить':

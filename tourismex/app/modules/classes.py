@@ -1,14 +1,11 @@
-from flask import Blueprint
+from tourismex.app.app import storage
 from flask_image_alchemy.fields import StdImageField
-from flask_image_alchemy.storages import S3Storage
 from flask_login import UserMixin
 
 from sqlalchemy import Integer, String, Float, Text
-from app.database import db
+from flask_sqlalchemy import SQLAlchemy
 
-module = Blueprint('entity', __name__, url_prefix='/entity')
-storage = S3Storage()  # создание экземпляра хранилища изображений
-storage.init_app(module)
+db = SQLAlchemy()  # создание экземпляра базы данных
 
 
 # модель товара
@@ -57,3 +54,5 @@ class ChatMessage(db.Model):
         StdImageField(
         )
     )
+
+

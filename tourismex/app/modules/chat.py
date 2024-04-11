@@ -1,13 +1,10 @@
+from tourismex.app.modules.classes import db, ChatMessage
+from tourismex.app.app import sio
 # обработка SocketIO сообщений (еще не доработано)
 import datetime
 
-from flask import Blueprint
-from flask_socketio import send
+from flask_socketio import send, SocketIO
 
-from ORM import ChatMessage
-
-
-module = Blueprint('entity', __name__, url_prefix='/entity')
 
 
 @sio.on('message')

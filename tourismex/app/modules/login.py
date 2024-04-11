@@ -1,3 +1,4 @@
+from tourismex.app.modules.classes import db, User
 from flask import render_template, request, redirect, flash, url_for, current_app, session, abort, Blueprint
 
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
@@ -5,13 +6,13 @@ import requests
 import secrets
 from urllib.parse import urlencode
 
-from ORM import User
 
-module = Blueprint('entity', __name__, url_prefix='/entity')
+
+login_bp = Blueprint('entity', __name__, url_prefix='/entity')
 
 
 # авторизация OAuth2
-@app.route('/authorize/<provider>')
+@login_bp.route('/authorize/<provider>')
 def oauth2_authorize(provider):
     if not current_user.is_anonymous:  # если пользователь уже авторизован
         return redirect(url_for('index'))
@@ -39,7 +40,7 @@ def oauth2_authorize(provider):
 
 
 # обработка callback
-@app.route('/callback/<provider>')
+@login_bp.route('/callback/<provider>')
 def oauth2_callback(provider):
     # print("callback")
     if not current_user.is_anonymous:  # если пользователь уже авторизован, то все готово
